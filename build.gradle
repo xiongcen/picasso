@@ -3,6 +3,10 @@ subprojects {
     repositories {
       mavenCentral()
     }
+
+    dependencies {
+      classpath 'com.android.tools.build:gradle:2.2.1'
+    }
   }
   repositories {
     mavenCentral()
