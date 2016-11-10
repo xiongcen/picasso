@@ -20,6 +20,7 @@ package com.squareup.picasso;
 public enum NetworkPolicy {
 
   /** Skips checking the disk cache and forces loading through the network. */
+  // 01
   NO_CACHE(1 << 0),
 
   /**
@@ -27,9 +28,11 @@ public enum NetworkPolicy {
    * <p>
    * <em>Note</em>: At this time this is only supported if you are using OkHttp.
    */
+  // 10
   NO_STORE(1 << 1),
 
   /** Forces the request through the disk cache only, skipping network. */
+  // 100
   OFFLINE(1 << 2);
 
   public static boolean shouldReadFromDiskCache(int networkPolicy) {

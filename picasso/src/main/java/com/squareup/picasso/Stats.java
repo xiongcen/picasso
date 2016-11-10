@@ -36,15 +36,27 @@ class Stats {
   final Cache cache;
   final Handler handler;
 
+  /**
+   * 从缓存中取出对应图片的计数
+   */
   long cacheHits;
   long cacheMisses;
   long totalDownloadSize;
+  /**
+   * 原始图片所占内存大小
+   */
   long totalOriginalBitmapSize;
   long totalTransformedBitmapSize;
   long averageDownloadSize;
+  /**
+   * 平均一张图片所占内存大小
+   */
   long averageOriginalBitmapSize;
   long averageTransformedBitmapSize;
   int downloadCount;
+  /**
+   * 原始图片加载个数
+   */
   int originalBitmapCount;
   int transformedBitmapCount;
 

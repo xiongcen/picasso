@@ -175,8 +175,15 @@ class Dispatcher {
     performSubmit(action, true);
   }
 
+  /**
+   * 提交请求
+   * @param action
+   * @param dismissFailed 表示不理会失败
+     */
   void performSubmit(Action action, boolean dismissFailed) {
+    // 可以通过RequestCreator#tag()方法设置tag，如果调用过Picasso#pauseTag，会被存入pausedTags中
     if (pausedTags.contains(action.getTag())) {
+      // 如果tag被添加入暂存，则将action也存入pausedActions中
       pausedActions.put(action.getTarget(), action);
       if (action.getPicasso().loggingEnabled) {
         log(OWNER_DISPATCHER, VERB_PAUSED, action.request.logId(),
@@ -185,8 +192,10 @@ class Dispatcher {
       return;
     }
 
+    // 通过action的key从图片任务集合中获取图片任务
     BitmapHunter hunter = hunterMap.get(action.getKey());
     if (hunter != null) {
+      // 获取的图片任务不为空，attach action
       hunter.attach(action);
       return;
     }
@@ -198,9 +207,13 @@ class Dispatcher {
       return;
     }
 
+    // 构造图片任务
     hunter = forRequest(action.getPicasso(), this, cache, stats, action);
+    // 提交图片加载的任务并拿到返回结果
     hunter.future = service.submit(hunter);
+    // 将这一次的action添加到图片任务集合
     hunterMap.put(action.getKey(), hunter);
+    // 如果设置不理会失败，那么直接从failedActions集合中移除这次action的target
     if (dismissFailed) {
       failedActions.remove(action.getTarget());
     }
@@ -365,11 +378,18 @@ class Dispatcher {
     }
   }
 
+  /**
+   * 执行完成
+   * @param hunter
+     */
   void performComplete(BitmapHunter hunter) {
+    // 判断是否要写入内存缓存
     if (shouldWriteToMemoryCache(hunter.getMemoryPolicy())) {
       cache.set(hunter.getKey(), hunter.getResult());
     }
+    // 将完成的任务从图片任务集合中移除
     hunterMap.remove(hunter.getKey());
+    // 暂存hunter到集合，等待一定时间再处理
     batch(hunter);
     if (hunter.getPicasso().loggingEnabled) {
       log(OWNER_DISPATCHER, VERB_BATCHED, getLogIdsForHunter(hunter), "for completion");

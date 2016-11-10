@@ -22,7 +22,7 @@ import android.graphics.Bitmap;
  * <p>
  * <em>Note:</em> The {@link Cache} is accessed by multiple threads. You must ensure
  * your {@link Cache} implementation is thread safe when {@link Cache#get(String)} or {@link
- * Cache#set(String, android.graphics.Bitmap)} is called.
+ * Cache#set(String, Bitmap)} is called.
  */
 public interface Cache {
   /** Retrieve an image for the specified {@code key} or {@code null}. */

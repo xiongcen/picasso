@@ -108,6 +108,11 @@ final class Utils {
     // No instances.
   }
 
+  /**
+   * 返回图片所占内存大小
+   * @param bitmap
+   * @return
+     */
   static int getBitmapBytes(Bitmap bitmap) {
     int result;
     if (SDK_INT >= KITKAT) {
@@ -174,18 +179,27 @@ final class Utils {
     Log.d(TAG, format("%1$-11s %2$-12s %3$s %4$s", owner, verb, logId, extras));
   }
 
+  /**
+   * 创建Request对应的key
+   * @param data
+   * @return
+     */
   static String createKey(Request data) {
+    // 创建Request对应的key
     String result = createKey(data, MAIN_THREAD_KEY_BUILDER);
+    // 设置MAIN_THREAD_KEY_BUILDER缓冲区的长度，设置0表示清空缓冲区
     MAIN_THREAD_KEY_BUILDER.setLength(0);
     return result;
   }
 
   static String createKey(Request data, StringBuilder builder) {
+    // Request的stableKey可以通过Request.Builder.stableKey设置
     if (data.stableKey != null) {
       builder.ensureCapacity(data.stableKey.length() + KEY_PADDING);
       builder.append(data.stableKey);
     } else if (data.uri != null) {
       String path = data.uri.toString();
+      // 验证当前长度是否小于参数minimumCapacity，如果成立则进行分配空间
       builder.ensureCapacity(path.length() + KEY_PADDING);
       builder.append(path);
     } else {
@@ -194,23 +208,27 @@ final class Utils {
     }
     builder.append(KEY_SEPARATOR);
 
+    // 图片的旋转角度
     if (data.rotationDegrees != 0) {
       builder.append("rotation:").append(data.rotationDegrees);
+      // 图片的旋转轴心点
       if (data.hasRotationPivot) {
         builder.append('@').append(data.rotationPivotX).append('x').append(data.rotationPivotY);
       }
       builder.append(KEY_SEPARATOR);
     }
+    // 图片裁剪的目标size
     if (data.hasSize()) {
       builder.append("resize:").append(data.targetWidth).append('x').append(data.targetHeight);
       builder.append(KEY_SEPARATOR);
     }
+    // 图片的scaleType设置
     if (data.centerCrop) {
       builder.append("centerCrop:").append(data.centerCropGravity).append(KEY_SEPARATOR);
     } else if (data.centerInside) {
       builder.append("centerInside").append(KEY_SEPARATOR);
     }
-
+    // 图片的其他设置
     if (data.transformations != null) {
       //noinspection ForLoopReplaceableByForEach
       for (int i = 0, count = data.transformations.size(); i < count; i++) {
@@ -222,6 +240,10 @@ final class Utils {
     return builder.toString();
   }
 
+  /**
+   * 关闭流
+   * @param is
+     */
   static void closeQuietly(InputStream is) {
     if (is == null) return;
     try {

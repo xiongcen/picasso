@@ -52,6 +52,7 @@ import static com.squareup.picasso.Utils.log;
 
 class BitmapHunter implements Runnable {
   /**
+   * 用于位图解码的全局锁，以确保我们只是一次解码一个。这只会发生在后台线程，帮助避免过多的内存抖动以及潜在的OOM。
    * Global lock for bitmap decoding to ensure that we are only are decoding one at a time. Since
    * this will only ever happen in background threads we help avoid excessive memory thrashing as
    * well as potential OOMs. Shamelessly stolen from Volley.
@@ -161,17 +162,21 @@ class BitmapHunter implements Runnable {
 
   @Override public void run() {
     try {
+      // 更新线程名
       updateThreadName(data);
 
       if (picasso.loggingEnabled) {
         log(OWNER_HUNTER, VERB_EXECUTING, getLogIdsForHunter(this));
       }
 
+      // 得到bitmap
       result = hunt();
 
+      // bitmap==null说明加载失败
       if (result == null) {
         dispatcher.dispatchFailed(this);
       } else {
+        // bitmap加载成功
         dispatcher.dispatchComplete(this);
       }
     } catch (Downloader.ResponseException e) {
@@ -198,6 +203,11 @@ class BitmapHunter implements Runnable {
     }
   }
 
+  /**
+   * 得到bitmap的关键方法
+   * @return
+   * @throws IOException
+     */
   Bitmap hunt() throws IOException {
     Bitmap bitmap = null;
 
@@ -213,7 +223,9 @@ class BitmapHunter implements Runnable {
       }
     }
 
+    // 通过RequestHandler(图片请求处理器)获取重试的次数 设置data的networkPolicy
     data.networkPolicy = retryCount == 0 ? NetworkPolicy.OFFLINE.index : networkPolicy;
+    // 通过对应的RequestHandler去load图片
     RequestHandler.Result result = requestHandler.load(data, networkPolicy);
     if (result != null) {
       loadedFrom = result.getLoadedFrom();
@@ -221,6 +233,7 @@ class BitmapHunter implements Runnable {
       bitmap = result.getBitmap();
 
       // If there was no Bitmap then we need to decode it from the stream.
+      // 如果没有Bitmap，那么我们需要从流中解码它
       if (bitmap == null) {
         InputStream is = result.getStream();
         try {
@@ -235,7 +248,9 @@ class BitmapHunter implements Runnable {
       if (picasso.loggingEnabled) {
         log(OWNER_HUNTER, VERB_DECODED, data.logId());
       }
+      // 更新统计缓存相关
       stats.dispatchBitmapDecoded(bitmap);
+      // 如果需要对图片进行转换，则走进if判断
       if (data.needsTransformation() || exifOrientation != 0) {
         synchronized (DECODE_LOCK) {
           if (data.needsMatrixTransform() || exifOrientation != 0) {
@@ -260,6 +275,10 @@ class BitmapHunter implements Runnable {
     return bitmap;
   }
 
+  /**
+   * 给BitmapHunter设置action 可以是单一任务也可以是多任务
+   * @param action
+     */
   void attach(Action action) {
     boolean loggingEnabled = picasso.loggingEnabled;
     Request request = action.request;
@@ -414,6 +433,15 @@ class BitmapHunter implements Runnable {
     Thread.currentThread().setName(builder.toString());
   }
 
+  /**
+   * 构造图片任务
+   * @param picasso
+   * @param dispatcher
+   * @param cache
+   * @param stats
+   * @param action
+     * @return
+     */
   static BitmapHunter forRequest(Picasso picasso, Dispatcher dispatcher, Cache cache, Stats stats,
       Action action) {
     Request request = action.getRequest();
@@ -423,6 +451,7 @@ class BitmapHunter implements Runnable {
     //noinspection ForLoopReplaceableByForEach
     for (int i = 0, count = requestHandlers.size(); i < count; i++) {
       RequestHandler requestHandler = requestHandlers.get(i);
+      // 通过遍历Picasso的requestHandlers集合，找到符合加载这次资源的方式，创建图片任务
       if (requestHandler.canHandleRequest(request)) {
         return new BitmapHunter(picasso, dispatcher, cache, stats, action, requestHandler);
       }

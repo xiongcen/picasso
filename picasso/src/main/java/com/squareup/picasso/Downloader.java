@@ -85,7 +85,7 @@ public interface Downloader {
      *
      * @param stream Image data stream.
      * @param loadedFromCache {@code true} if the source of the stream is from a local disk cache.
-     * @deprecated Use {@link Response#Response(java.io.InputStream, boolean, long)} instead.
+     * @deprecated Use {@link Response#Response(InputStream, boolean, long)} instead.
      */
     @Deprecated @SuppressWarnings("UnusedDeclaration")
     public Response(@NonNull InputStream stream, boolean loadedFromCache) {

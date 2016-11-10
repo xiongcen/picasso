@@ -41,7 +41,7 @@ public interface Target {
    * Callback indicating the image could not be successfully loaded.
    * <p>
    * <strong>Note:</strong> The passed {@link Drawable} may be {@code null} if none has been
-   * specified via {@link RequestCreator#error(android.graphics.drawable.Drawable)}
+   * specified via {@link RequestCreator#error(Drawable)}
    * or {@link RequestCreator#error(int)}.
    */
   void onBitmapFailed(Drawable errorDrawable);
@@ -50,7 +50,7 @@ public interface Target {
    * Callback invoked right before your request is submitted.
    * <p>
    * <strong>Note:</strong> The passed {@link Drawable} may be {@code null} if none has been
-   * specified via {@link RequestCreator#placeholder(android.graphics.drawable.Drawable)}
+   * specified via {@link RequestCreator#placeholder(Drawable)}
    * or {@link RequestCreator#placeholder(int)}.
    */
   void onPrepareLoad(Drawable placeHolderDrawable);

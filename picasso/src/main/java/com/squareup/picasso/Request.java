@@ -104,6 +104,8 @@ public final class Request {
     if (transformations == null) {
       this.transformations = null;
     } else {
+      // 返回一个 不可修改的List
+      // 如果原List实现了RandomAccess接口，返回的List也将实现此接口
       this.transformations = unmodifiableList(transformations);
     }
     this.targetWidth = targetWidth;
@@ -179,6 +181,7 @@ public final class Request {
     if (uri != null) {
       return String.valueOf(uri.getPath());
     }
+    // 返回为无符号整数基数为16的整数参数的字符串表示形式
     return Integer.toHexString(resourceId);
   }
 
@@ -186,10 +189,18 @@ public final class Request {
     return targetWidth != 0 || targetHeight != 0;
   }
 
+  /**
+   * 判断是否需要转换，矩阵转换或者自定义转换
+   * @return
+     */
   boolean needsTransformation() {
     return needsMatrixTransform() || hasCustomTransformations();
   }
 
+  /**
+   * 判断是否需要矩阵转换，targetWidth != 0 || targetHeight != 0 || rotationDegrees != 0
+   * @return
+     */
   boolean needsMatrixTransform() {
     return hasSize() || rotationDegrees != 0;
   }
@@ -454,6 +465,7 @@ public final class Request {
     }
 
     /**
+     * 增加对图片的自定义变化
      * Add a custom transformation to be applied to the image.
      * <p>
      * Custom transformations will always be run after the built-in transformations.

@@ -32,6 +32,9 @@ public class LruCache implements Cache {
 
   private int size;
   private int putCount;
+  /**
+   * 被移除的bitmap计数
+   */
   private int evictionCount;
   private int hitCount;
   private int missCount;
@@ -68,6 +71,11 @@ public class LruCache implements Cache {
     return null;
   }
 
+  /**
+   * 添加图片到内存缓存
+   * @param key
+   * @param bitmap
+     */
   @Override public void set(@NonNull String key, @NonNull Bitmap bitmap) {
     if (key == null || bitmap == null) {
       throw new NullPointerException("key == null || bitmap == null");
@@ -81,8 +89,10 @@ public class LruCache implements Cache {
     synchronized (this) {
       putCount++;
       size += addedSize;
+      // 返回以前同样key存储的value
       Bitmap previous = map.put(key, bitmap);
       if (previous != null) {
+        // value不为空需要减去以前value所占内存
         size -= Utils.getBitmapBytes(previous);
       }
     }
@@ -90,6 +100,10 @@ public class LruCache implements Cache {
     trimToSize(maxSize);
   }
 
+  /**
+   * 整理内存占用，发现内存占用size>maxSize，则移除map中第一个元素，并计数，直到size<=maxSize
+   * @param maxSize
+     */
   private void trimToSize(int maxSize) {
     while (true) {
       String key;

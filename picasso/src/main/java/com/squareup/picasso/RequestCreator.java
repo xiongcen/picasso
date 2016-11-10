@@ -195,6 +195,7 @@ public class RequestCreator {
   }
 
   /**
+   * 尝试以合适的宽高调整图片大小。必须延迟加载直到ImageView布局完成。
    * Attempt to resize the image to fit exactly into the target {@link ImageView}'s bounds. This
    * will result in delayed execution of the request until the {@link ImageView} has been laid out.
    * <p>
@@ -532,10 +533,11 @@ public class RequestCreator {
    * <p>
    * <em>Note:</em> This method keeps a weak reference to the {@link Target} instance and will be
    * garbage collected if you do not keep a strong reference to it. To receive callbacks when an
-   * image is loaded use {@link #into(android.widget.ImageView, Callback)}.
+   * image is loaded use {@link #into(ImageView, Callback)}.
    */
   public void into(@NonNull Target target) {
     long started = System.nanoTime();
+    // 检查当前是否在主线程上执行，如果不是则抛出异常
     checkMain();
 
     if (target == null) {
@@ -545,29 +547,41 @@ public class RequestCreator {
       throw new IllegalStateException("Fit cannot be used with a Target.");
     }
 
+    // 如果图片资源为空 || 默认图片资源为空
     if (!data.hasImage()) {
+      // 中断target的图片请求
       picasso.cancelRequest(target);
+      // 将设置的placeholder显示出来
       target.onPrepareLoad(setPlaceholder ? getPlaceholderDrawable() : null);
       return;
     }
 
+    // 创建一个Request对象
     Request request = createRequest(started);
+    // 根据Request创建requestKey
     String requestKey = createKey(request);
 
+    // 检查图片是否直接在内存中获取
     if (shouldReadFromMemoryCache(memoryPolicy)) {
+      // 通过requestKey去缓存中取bitmap
       Bitmap bitmap = picasso.quickMemoryCacheCheck(requestKey);
+      // 如果图片不为空，则中断target的图片请求
       if (bitmap != null) {
         picasso.cancelRequest(target);
+        // 并且在target上展示图片，标明来源为MEMORY
         target.onBitmapLoaded(bitmap, MEMORY);
         return;
       }
     }
 
+    // 将设置的placeholder显示出来
     target.onPrepareLoad(setPlaceholder ? getPlaceholderDrawable() : null);
 
+    // 构造action
     Action action =
         new TargetAction(picasso, target, request, memoryPolicy, networkPolicy, errorDrawable,
             requestKey, tag, errorResId);
+    // 将action加入请求队列
     picasso.enqueueAndSubmit(action);
   }
 
@@ -679,7 +693,7 @@ public class RequestCreator {
    * <em>Note:</em> The {@link Callback} param is a strong reference and will prevent your
    * {@link android.app.Activity} or {@link android.app.Fragment} from being garbage collected. If
    * you use this method, it is <b>strongly</b> recommended you invoke an adjacent
-   * {@link Picasso#cancelRequest(android.widget.ImageView)} call to prevent temporary leaking.
+   * {@link Picasso#cancelRequest(ImageView)} call to prevent temporary leaking.
    */
   public void into(ImageView target, Callback callback) {
     long started = System.nanoTime();
@@ -750,7 +764,9 @@ public class RequestCreator {
     }
   }
 
-  /** Create the request optionally passing it through the request transformer. */
+  /**
+   * 创建图片请求Request
+   * Create the request optionally passing it through the request transformer. */
   private Request createRequest(long started) {
     int id = nextId.getAndIncrement();
 
@@ -758,12 +774,15 @@ public class RequestCreator {
     request.id = id;
     request.started = started;
 
+    // 打印Log相关
     boolean loggingEnabled = picasso.loggingEnabled;
     if (loggingEnabled) {
       log(OWNER_MAIN, VERB_CREATED, request.plainId(), request.toString());
     }
 
+    // 得到一个转换以后的Request，默认使用RequestTransformer.IDENTITY，它是不做任何转换
     Request transformed = picasso.transformRequest(request);
+    // 当转换成新的Request对象，对新的transformed赋值id和started
     if (transformed != request) {
       // If the request was changed, copy over the id and timestamp from the original.
       transformed.id = id;

@@ -59,7 +59,7 @@ import static com.squareup.picasso.Utils.log;
 /**
  * Image downloading, transformation, and caching manager.
  * <p>
- * Use {@link #with(android.content.Context)} for the global singleton instance or construct your
+ * Use {@link #with(Context)} for the global singleton instance or construct your
  * own instance with {@link Builder}.
  */
 public class Picasso {
@@ -91,7 +91,10 @@ public class Picasso {
      */
     Request transformRequest(Request request);
 
-    /** A {@link RequestTransformer} which returns the original request. */
+    /**
+     * 一个不做任何转换的RequestTransformer
+     * A {@link RequestTransformer} which returns the original request.
+     * */
     RequestTransformer IDENTITY = new RequestTransformer() {
       @Override public Request transformRequest(Request request) {
         return request;
@@ -194,6 +197,7 @@ public class Picasso {
     allRequestHandlers.add(new AssetRequestHandler(context));
     allRequestHandlers.add(new FileRequestHandler(context));
     allRequestHandlers.add(new NetworkRequestHandler(dispatcher.downloader, stats));
+    // Collections#unmodifiableList()返回一个不可修改的集合对象
     requestHandlers = Collections.unmodifiableList(allRequestHandlers);
 
     this.stats = stats;
@@ -337,6 +341,7 @@ public class Picasso {
   }
 
   /**
+   * 创建一个图片请求
    * Start an image request using the specified image file. This is a convenience method for
    * calling {@link #load(Uri)}.
    * <p>
@@ -505,13 +510,23 @@ public class Picasso {
     targetToDeferredRequestCreator.put(view, request);
   }
 
+  /**
+   * 将图片请求入队
+   * @param action
+     */
   void enqueueAndSubmit(Action action) {
+    // 通过action拿到对应的target
     Object target = action.getTarget();
+    // 如果target不为空 && (targetToAction的集合里通过target取出的action 不等于 本次action)
+    // 说明target被复用
     if (target != null && targetToAction.get(target) != action) {
       // This will also check we are on the main thread.
+      // 中断之前绑定在target上的action
       cancelExistingRequest(target);
+      // 向targetToAction添加新的target和action绑定关系
       targetToAction.put(target, action);
     }
+    // 将新的action交给dispatcher分发处理类
     submit(action);
   }
 
@@ -529,11 +544,16 @@ public class Picasso {
     return cached;
   }
 
+  /**
+   * 图片加载完成的回调
+   * @param hunter
+     */
   void complete(BitmapHunter hunter) {
     Action single = hunter.getAction();
     List<Action> joined = hunter.getActions();
 
     boolean hasMultiple = joined != null && !joined.isEmpty();
+    // 是否需要分发
     boolean shouldDeliver = single != null || hasMultiple;
 
     if (!shouldDeliver) {
@@ -583,7 +603,14 @@ public class Picasso {
     }
   }
 
+  /**
+   * 分发action处理
+   * @param result
+   * @param from
+   * @param action
+     */
   private void deliverAction(Bitmap result, LoadedFrom from, Action action) {
+    // 如果cancel标志位被置为true，则返回
     if (action.isCancelled()) {
       return;
     }
@@ -606,11 +633,20 @@ public class Picasso {
     }
   }
 
+  /**
+   * 取消已经存在的图片请求
+   * @param target
+     */
   private void cancelExistingRequest(Object target) {
+    // 检查当前是否在主线程上执行，如果不是则抛出异常
     checkMain();
+    // targetToAction在Picasso构造方法中创建，在enqueueAndSubmit()方法中向targetToAction添加内容
     Action action = targetToAction.remove(target);
+    // 取出的action不为空
     if (action != null) {
+      // 将action的cancel标志位置为true
       action.cancel();
+      // 将action从dispatcher分发处理类中移除
       dispatcher.dispatchCancel(action);
     }
     if (target instanceof ImageView) {
@@ -690,10 +726,15 @@ public class Picasso {
    * </ul>
    * <p>
    * If these settings do not meet the requirements of your application you can construct your own
-   * with full control over the configuration by using {@link Picasso.Builder} to create a
+   * with full control over the configuration by using {@link Builder} to create a
    * {@link Picasso} instance. You can either use this directly or by setting it as the global
    * instance with {@link #setSingletonInstance}.
    */
+  /**
+   * 获取Picasso单例类
+   * @param context
+   * @return
+     */
   public static Picasso with(@NonNull Context context) {
     if (context == null) {
       throw new IllegalArgumentException("context == null");
@@ -701,6 +742,7 @@ public class Picasso {
     if (singleton == null) {
       synchronized (Picasso.class) {
         if (singleton == null) {
+          // 通过build()初始化Picasso需要的配置
           singleton = new Builder(context).build();
         }
       }
@@ -729,15 +771,42 @@ public class Picasso {
   @SuppressWarnings("UnusedDeclaration") // Public API.
   public static class Builder {
     private final Context context;
+    /**
+     * 下载器
+     */
     private Downloader downloader;
+    /**
+     * 用于获取图片的线程池
+     */
     private ExecutorService service;
+    /**
+     * 内存缓存
+     */
     private Cache cache;
+    /**
+     * 回调接口
+     */
     private Listener listener;
+    /**
+     * 图片请求拦截器，用于处理图片请求，图片转换接口
+     */
     private RequestTransformer transformer;
+    /**
+     * 不同类型图片请求处理器
+     */
     private List<RequestHandler> requestHandlers;
+    /**
+     * 图片配置
+     */
     private Bitmap.Config defaultBitmapConfig;
 
+    /**
+     * 是否显示图片来源指示器
+     */
     private boolean indicatorsEnabled;
+    /**
+     * 是否允许日志
+     */
     private boolean loggingEnabled;
 
     /** Start building a new {@link Picasso} instance. */

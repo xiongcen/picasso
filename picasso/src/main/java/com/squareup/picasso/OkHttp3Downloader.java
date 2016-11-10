@@ -111,7 +111,7 @@ public final class OkHttp3Downloader implements Downloader {
       }
     }
 
-    Request.Builder builder = new okhttp3.Request.Builder().url(uri.toString());
+    Request.Builder builder = new Request.Builder().url(uri.toString());
     if (cacheControl != null) {
       builder.cacheControl(cacheControl);
     }
