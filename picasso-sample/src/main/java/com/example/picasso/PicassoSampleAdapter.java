@@ -22,6 +22,7 @@ final class PicassoSampleAdapter extends BaseAdapter {
   private static final int NOTIFICATION_ID = 666;
 
   enum Sample {
+    TEST_Grid_VIEW("Test Grid View", MainActivity.class),
     GRID_VIEW("Image Grid View", SampleGridViewActivity.class),
     GALLERY("Load from Gallery", SampleGalleryActivity.class),
     CONTACTS("Contact Photos", SampleContactsActivity.class),
