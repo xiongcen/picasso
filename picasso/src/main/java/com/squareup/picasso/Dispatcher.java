@@ -183,7 +183,7 @@ class Dispatcher {
   void performSubmit(Action action, boolean dismissFailed) {
     // 可以通过RequestCreator#tag()方法设置tag，如果调用过Picasso#pauseTag，会被存入pausedTags中
     if (pausedTags.contains(action.getTag())) {
-      // 如果tag被添加入暂存，则将action也存入pausedActions中
+      // 如果tag被添加入暂停加载的pausedTags集合，则将action存入暂停加载的pausedActions集合中
       pausedActions.put(action.getTarget(), action);
       if (action.getPicasso().loggingEnabled) {
         log(OWNER_DISPATCHER, VERB_PAUSED, action.request.logId(),
@@ -195,7 +195,7 @@ class Dispatcher {
     // 通过action的key从图片任务集合中获取图片任务
     BitmapHunter hunter = hunterMap.get(action.getKey());
     if (hunter != null) {
-      // 获取的图片任务不为空，attach action
+      // 获取的图片任务不为空，说明该图片已经在执行加载，只要将本次action关联到hunter
       hunter.attach(action);
       return;
     }

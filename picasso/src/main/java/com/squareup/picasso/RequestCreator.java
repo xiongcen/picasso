@@ -195,7 +195,7 @@ public class RequestCreator {
   }
 
   /**
-   * 尝试以合适的宽高调整图片大小。必须延迟加载直到ImageView布局完成。
+   * 尝试以合适的宽高调整图片大小，将会延迟加载直到ImageView布局完成。
    * Attempt to resize the image to fit exactly into the target {@link ImageView}'s bounds. This
    * will result in delayed execution of the request until the {@link ImageView} has been laid out.
    * <p>
@@ -547,7 +547,7 @@ public class RequestCreator {
       throw new IllegalStateException("Fit cannot be used with a Target.");
     }
 
-    // 如果图片资源为空 || 默认图片资源为空
+    // 如果图片资源为空 || 图片资源为空
     if (!data.hasImage()) {
       // 中断target的图片请求
       picasso.cancelRequest(target);
@@ -730,9 +730,12 @@ public class RequestCreator {
     Request request = createRequest(started);
     String requestKey = createKey(request);
 
+    // 检查图片是否直接在内存中获取
     if (shouldReadFromMemoryCache(memoryPolicy)) {
+      // 通过requestKey去缓存中取bitmap
       Bitmap bitmap = picasso.quickMemoryCacheCheck(requestKey);
       if (bitmap != null) {
+        // 如果图片不为空，则中断target的图片请求
         picasso.cancelRequest(target);
         setBitmap(target, picasso.context, bitmap, MEMORY, noFade, picasso.indicatorsEnabled);
         if (picasso.loggingEnabled) {
@@ -749,10 +752,12 @@ public class RequestCreator {
       setPlaceholder(target, getPlaceholderDrawable());
     }
 
+    // 构造action
     Action action =
         new ImageViewAction(picasso, target, request, memoryPolicy, networkPolicy, errorResId,
             errorDrawable, requestKey, tag, callback, noFade);
 
+    // 将action加入请求队列
     picasso.enqueueAndSubmit(action);
   }
 
