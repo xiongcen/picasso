@@ -288,6 +288,7 @@ final class Utils {
   }
 
   static File createDefaultCacheDir(Context context) {
+    // 默认创建data/data/packagename/cache/picasso-cache/目录缓存
     File cache = new File(context.getApplicationContext().getCacheDir(), PICASSO_CACHE);
     if (!cache.exists()) {
       //noinspection ResultOfMethodCallIgnored

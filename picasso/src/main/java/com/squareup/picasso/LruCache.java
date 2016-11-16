@@ -60,11 +60,14 @@ public class LruCache implements Cache {
 
     Bitmap mapValue;
     synchronized (this) {
+      // 从hashmap中获取key对应的缓存值。
       mapValue = map.get(key);
       if (mapValue != null) {
+        // 不为空，缓存命中加1
         hitCount++;
         return mapValue;
       }
+      // 若为空缓存未命中加1
       missCount++;
     }
 
@@ -152,6 +155,7 @@ public class LruCache implements Cache {
       String key = entry.getKey();
       Bitmap value = entry.getValue();
       int newlineIndex = key.indexOf(KEY_SEPARATOR);
+      // 如果对应的url相同，删除各种图片属性的bitmap缓存
       if (newlineIndex == uriLength && key.substring(0, newlineIndex).equals(uri)) {
         i.remove();
         size -= Utils.getBitmapBytes(value);
